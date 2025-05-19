@@ -1,0 +1,26 @@
+# Ignorar entorno virtual
+.venv/
+venv/
+
+# Archivos de configuración y caché de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Dependencias generadas
+# requirements.txt
+
+# Configuración de IDEs
+.vscode/
+.idea/
+*.sublime-workspace
+
+# Archivos sensibles
+#.env
+*.log
+db.sqlite3
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
