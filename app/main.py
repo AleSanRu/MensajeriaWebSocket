@@ -11,13 +11,14 @@ from app.core.config import settings
 
 app = FastAPI()
 
+
 # Configurar CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],# Permite cualquier origen
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"], # Permite todos los métodos HTTP
+    allow_headers=["*"], # Permite todos los headers
 )
 
 # Servir archivos estáticos
@@ -27,11 +28,15 @@ app.include_router(api_router, prefix="/api")
 
 @app.websocket("/ws/{username}")
 async def websocket_endpoint(websocket: WebSocket, username: str):
+    # Conectar el usuario al manager de WebSockets
     await manager.connect(websocket, username)
     try:
         while True:
+            # Esperar mensajes del cliente
             data = await websocket.receive_text()
+            # Parsear el mensaje JSON
             data_json = json.loads(data)
+            # Retransmitir el mensaje al destinatario
             await manager.broadcast(
                 message=data_json["message"],
                 sender=username,

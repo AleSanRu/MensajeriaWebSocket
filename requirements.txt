@@ -9,42 +9,42 @@
 #email-validator
 #No te olvides que falta 3 dependencias#
 #http://localhost:8000/static/test_chat.html
-anyio==4.9.0
-bcrypt==4.3.0
-certifi==2025.4.26
-charset-normalizer==3.4.2
+anyio==4.9.0 #Librería para manejar operaciones asincrónicas
+bcrypt==4.3.0 #Algoritmo de hashing seguro para contraseñas.
+certifi==2025.4.26 #Certificados SSL raíz actualizados, para validar conexiones HTTPS.
+charset-normalizer==3.4.2 #Detecta y normaliza la codificación de texto en respuestas HTTP.
 click==8.1.8
 colorama==0.4.6
 defusedxml==0.7.1
 dnspython==2.7.0
 ecdsa==0.19.1
-email-validator==2.2.0
-fastapi==0.95.2
+email-validator==2.2.0 #Valida direcciones de correo
+fastapi==0.95.2 #Framework principal para construir APIs web modernas con Python
 h11==0.16.0
 httpie==3.2.4
-idna==3.10
+idna==3.10 #Soporte para dominios
 markdown-it-py==3.0.0
 mdurl==0.1.2
 multidict==6.4.3
-passlib==1.7.4
-pip==25.1.1
+passlib==1.7.4 #Librería de utilidades para hashing de contraseñas
+pip==25.1.1 #	Instalador de paquetes.
 pyasn1==0.6.1
-pydantic==1.10.22
+pydantic==1.10.22 #Validación de datos basada en clases y anotaciones de tipo
 Pygments==2.19.1
-pymongo==4.3.3
-PySocks==1.7.1
-python-dotenv==1.0.0
-python-jose==3.3.0
-python-multipart==0.0.6
+pymongo==4.3.3 #Cliente oficial de MongoDB para Python.
+PySocks==1.7.1 #Permite enviar tráfico HTTP/SOCKS proxy (útil en redireccionamiento de requests).
+python-dotenv==1.0.0 #Carga variables de entorno desde un archivo .env.
+python-jose==3.3.0 #Permite generar y verificar tokens JWT
+python-multipart==0.0.6 #Permite manejar formularios multipart/form-data (por ejemplo, subida de archivos).
 requests==2.32.3
 requests-toolbelt==1.0.0
 rich==14.0.0
-rsa==4.9.1
-setuptools==80.3.1
-six==1.17.0
-sniffio==1.3.1
-starlette==0.27.0
+rsa==4.9.1 #Soporte para firmas digitales y cifrado con claves RSA.
+setuptools==80.3.1 #Administra instalación de paquetes Python
+six==1.17.0  #Compatibilidad entre Python 2 y 3
+sniffio==1.3.1 #Detecta automáticamente qué backend asincrónico se está usando
+starlette==0.27.0 #	Base sobre la que se construye FastAPI (maneja peticiones, respuestas, rutas, etc).
 typing_extensions==4.13.2
-urllib3==2.4.0
-uvicorn==0.22.0
-websockets==11.0.3
+urllib3==2.4.0 #Cliente HTTP de bajo nivel usado por requests
+uvicorn==0.22.0 #Servidor ASGI ultrarrápido para ejecutar FastAPI.
+websockets==11.0.3 #	Soporte para WebSocket (comunicación en tiempo real).

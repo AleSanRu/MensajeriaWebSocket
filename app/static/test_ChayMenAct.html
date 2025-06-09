@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat, Multimedia y Estado de Usuario</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            background-color: #f5f5f5;
+        }
+        .app-container {
+            display: flex;
+            gap: 20px;
+        }
+        #chat-container, #media-container, #status-container { 
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            overflow: hidden; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background: white;
+            flex: 1;
+        }
+        .container-header { 
+            background: #4a6fa5; 
+            color: white; 
+            padding: 15px; 
+            font-weight: bold; 
+            font-size: 1.2em;
+        }
+        #chat-messages { 
+            height: 400px; 
+            overflow-y: auto; 
+            padding: 15px; 
+            background: #f9f9f9; 
+        }
+        .message { 
+            margin-bottom: 15px; 
+            padding: 10px; 
+            border-radius: 5px; 
+            background: white; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+        }
+        .message-sender { 
+            font-weight: bold; 
+            color: #4a6fa5; 
+        }
+        .message-time { 
+            font-size: 0.8em; 
+            color: #999; 
+            margin-left: 10px; 
+        }
+        .message-content { 
+            margin-top: 5px; 
+        }
+        .message-image {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+        .input-area { 
+            padding: 15px; 
+            background: #eee; 
+        }
+        .input-row { 
+            display: flex; 
+            margin-bottom: 10px; 
+            gap: 10px;
+        }
+        input[type="text"], input[type="file"] { 
+            padding: 10px; 
+            border: 1px solid #ddd; 
+            border-radius: 4px; 
+            flex: 1; 
+        }
+        button { 
+            padding: 10px 20px; 
+            background: #4a6fa5; 
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #3a5a8f;
+        }
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        #connection-status { 
+            margin-top: 10px; 
+            text-align: center; 
+            font-size: 0.9em; 
+            color: #666; 
+        }
+        .status-connected { color: green; }
+        .status-disconnected { color: red; }
+        #media-preview {
+            max-width: 100%;
+            max-height: 300px;
+            margin-top: 10px;
+            display: none;
+        }
+        .tab-container {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        .tab {
+            padding: 10px 20px;
+            background: #ddd;
+            cursor: pointer;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+        }
+        .tab.active {
+            background: #4a6fa5;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        #user-status-list {
+            padding: 15px;
+        }
+        .user-status-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .user-status-username {
+            font-weight: bold;
+        }
+        .user-status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-online {
+            background-color: #2ecc71;
+        }
+        .status-offline {
+            background-color: #e74c3c;
+        }
+        .status-away {
+            background-color: #f39c12;
+        }
+        #status-form {
+            padding: 15px;
+            background: #eee;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center; color: #4a6fa5;">Sistema Integrado de Chat, Multimedia y Estado</h1>
+    
+    <div class="app-container">
+        <!-- Panel de Chat -->
+        <div id="chat-container">
+            <div class="container-header">Chat en Tiempo Real</div>
+            
+            <div class="input-area">
+                <div class="input-row">
+                    <input type="text" id="username" placeholder="Nombre de usuario">
+                    <button id="connect-button">Conectar</button>
+                </div>
+                <div id="connection-status" class="status-disconnected">Desconectado</div>
+            </div>
+            
+            <div id="chat-messages"></div>
+            
+            <div class="input-area">
+                <div class="tab-container">
+                    <div class="tab active" onclick="switchTab('text')">Texto</div>
+                    <div class="tab" onclick="switchTab('media')">Multimedia</div>
+                </div>
+                
+                <div id="text-tab" class="tab-content active">
+                    <div class="input-row">
+                        <input type="text" id="receiver" placeholder="Destinatario">
+                        <input type="text" id="message-input" placeholder="Escribe tu mensaje...">
+                        <button id="send-button" disabled>Enviar</button>
+                    </div>
+                </div>
+                
+                <div id="media-tab" class="tab-content">
+                    <div class="input-row">
+                        <input type="text" id="media-receiver" placeholder="Destinatario">
+                        <input type="file" id="file-input" accept="image/*">
+                    </div>
+                    <img id="media-preview" alt="Vista previa">
+                    <div class="input-row">
+                        <button id="send-media-button" disabled>Enviar Imagen</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Panel de Multimedia -->
+        <div id="media-container">
+            <div class="container-header">Gestión de Multimedia</div>
+            
+            <div class="input-area">
+                <h3>Subir Archivo</h3>
+                <div class="input-row">
+                    <input type="file" id="upload-file-input" accept="image/*">
+                    <button id="upload-button">Subir</button>
+                </div>
+                <div id="upload-status"></div>
+                
+                <h3>Ver Archivo</h3>
+                <div class="input-row">
+                    <input type="text" id="file-id-input" placeholder="ID del archivo">
+                    <button id="view-button">Mostrar</button>
+                </div>
+                <div id="media-display"></div>
+            </div>
+        </div>
+        
+        <!-- Panel de Estado de Usuario -->
+        <div id="status-container">
+            <div class="container-header">Estado de Usuarios</div>
+            
+            <div id="user-status-list">
+                <p>Cargando estados...</p>
+            </div>
+            
+            <div id="status-form" class="input-area">
+                <h3>Actualizar mi estado</h3>
+                <div class="input-row">
+                    <select id="status-select">
+                        <option value="online">En línea</option>
+                        <option value="offline">Desconectado</option>
+                        <option value="away">Ausente</option>
+                        <option value="busy">Ocupado</option>
+                    </select>
+                    <button id="update-status-button" disabled>Actualizar</button>
+                </div>
+                <div id="status-update-message"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Elementos del DOM
+        const usernameInput = document.getElementById('username');
+        const connectButton = document.getElementById('connect-button');
+        const receiverInput = document.getElementById('receiver');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        const chatMessages = document.getElementById('chat-messages');
+        const connectionStatus = document.getElementById('connection-status');
+        const fileInput = document.getElementById('file-input');
+        const mediaPreview = document.getElementById('media-preview');
+        const sendMediaButton = document.getElementById('send-media-button');
+        const mediaReceiverInput = document.getElementById('media-receiver');
+        const uploadFileInput = document.getElementById('upload-file-input');
+        const uploadButton = document.getElementById('upload-button');
+        const uploadStatus = document.getElementById('upload-status');
+        const fileIdInput = document.getElementById('file-id-input');
+        const viewButton = document.getElementById('view-button');
+        const mediaDisplay = document.getElementById('media-display');
+        const userStatusList = document.getElementById('user-status-list');
+        const statusSelect = document.getElementById('status-select');
+        const updateStatusButton = document.getElementById('update-status-button');
+        const statusUpdateMessage = document.getElementById('status-update-message');
+
+        let socket;
+        let currentUsername = '';
+        let userStatusConnection;
+        let statusInterval;
+
+        // Conexión WebSocket para el chat
+        function connectWebSocket(username) {
+            try {
+                socket = new WebSocket(`ws://${window.location.host}/ws/${username}`);
+                
+                socket.onopen = () => {
+                    updateConnectionStatus(true);
+                    connectButton.textContent = 'Desconectar';
+                    sendButton.disabled = false;
+                    sendMediaButton.disabled = false;
+                    currentUsername = username;
+                    addSystemMessage(`Conectado como ${username}`);
+                    
+                    // Iniciar conexión de estado de usuario
+                    setupUserStatusConnection(username);
+                    // Actualizar estado inicial a "online"
+                    updateUserStatus('online');
+                };
+                
+                socket.onmessage = (event) => {
+                    const message = JSON.parse(event.data);
+                    if (message.content.startsWith('ARCHIVO:')) {
+                        const fileId = message.content.split(':')[1];
+                        addMessage(message.sender, `[Imagen enviada]`, message.timestamp, fileId);
+                    } else {
+                        addMessage(message.sender, message.content, message.timestamp);
+                    }
+                };
+                
+                socket.onclose = () => {
+                    updateConnectionStatus(false);
+                    connectButton.textContent = 'Conectar';
+                    sendButton.disabled = true;
+                    sendMediaButton.disabled = true;
+                    currentUsername = '';
+                    addSystemMessage('Desconectado del servidor');
+                    
+                    // Cerrar conexión de estado de usuario
+                    if (userStatusConnection) {
+                        userStatusConnection.close();
+                    }
+                    clearInterval(statusInterval);
+                };
+                
+                socket.onerror = (error) => {
+                    console.error('Error en WebSocket:', error);
+                    addSystemMessage('Error de conexión');
+                };
+                
+            } catch (error) {
+                console.error('Error al conectar:', error);
+                alert('Error al conectar con el servidor');
+            }
+        }
+
+        // Configurar conexión SignalR para estado de usuario
+        function setupUserStatusConnection(username) {
+            // Crear conexión SignalR
+            userStatusConnection = new signalR.HubConnectionBuilder()
+                .withUrl("http://localhost:5279/userStatusHub")
+                .configureLogging(signalR.LogLevel.Information)
+                .build();
+            
+            // Definir manejador para recibir actualizaciones de estado
+            userStatusConnection.on("ReceiveStatus", (username, status) => {
+                updateUserStatusInList(username, status);
+            });
+            
+            // Iniciar conexión
+            userStatusConnection.start()
+                .then(() => {
+                    console.log("Conectado al hub de estado de usuario");
+                    updateStatusButton.disabled = false;
+                    
+                    // Obtener estados iniciales
+                    fetchUserStatuses();
+                    
+                    // Configurar intervalo para actualizar periódicamente
+                    statusInterval = setInterval(fetchUserStatuses, 10000);
+                })
+                .catch(err => {
+                    console.error("Error al conectar al hub de estado:", err.toString());
+                    statusUpdateMessage.textContent = "Error al conectar al servicio de estados";
+                    statusUpdateMessage.style.color = "red";
+                });
+        }
+
+        // Obtener lista de estados de usuario
+        async function fetchUserStatuses() {
+            try {
+                const response = await fetch('http://localhost:5279/api/UserStatus');
+                if (!response.ok) throw new Error("Error al obtener estados");
+                
+                const statuses = await response.json();
+                renderUserStatusList(statuses);
+            } catch (error) {
+                console.error("Error al obtener estados:", error);
+                userStatusList.innerHTML = `<p style="color: red;">Error al cargar estados: ${error.message}</p>`;
+            }
+        }
+
+        // Renderizar lista de estados
+        function renderUserStatusList(statuses) {
+            if (!statuses || statuses.length === 0) {
+                userStatusList.innerHTML = "<p>No hay usuarios disponibles</p>";
+                return;
+            }
+            
+            let html = '<div>';
+            statuses.forEach(status => {
+                const statusClass = getStatusClass(status.status);
+                const lastSeen = status.updatedAt ? new Date(status.updatedAt).toLocaleString() : 'Desconocido';
+                
+                html += `
+                    <div class="user-status-item">
+                        <div>
+                            <span class="user-status-indicator ${statusClass}"></span>
+                            <span class="user-status-username">${status.username}</span>
+                        </div>
+                        <div>
+                            <span>${translateStatus(status.status)}</span>
+                            <span style="font-size: 0.8em; color: #666; margin-left: 10px;">${lastSeen}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            
+            userStatusList.innerHTML = html;
+        }
+
+        // Actualizar estado de un usuario en la lista
+        function updateUserStatusInList(username, status) {
+            const statusItems = userStatusList.querySelectorAll('.user-status-item');
+            let found = false;
+            
+            statusItems.forEach(item => {
+                const usernameElement = item.querySelector('.user-status-username');
+                if (usernameElement && usernameElement.textContent === username) {
+                    found = true;
+                    const statusElement = item.querySelector('span:not(.user-status-username):not(.user-status-indicator)');
+                    const indicator = item.querySelector('.user-status-indicator');
+                    
+                    if (statusElement) statusElement.textContent = translateStatus(status);
+                    if (indicator) {
+                        indicator.className = 'user-status-indicator ' + getStatusClass(status);
+                    }
+                    
+                    // Actualizar timestamp
+                    const timeElement = item.querySelector('span[style*="font-size: 0.8em"]');
+                    if (timeElement) {
+                        timeElement.textContent = new Date().toLocaleString();
+                    }
+                }
+            });
+            
+            if (!found) {
+                // Si el usuario no está en la lista, refrescar toda la lista
+                fetchUserStatuses();
+            }
+        }
+
+        // Actualizar el estado del usuario actual
+        async function updateUserStatus(status) {
+            if (!currentUsername) return;
+            
+            try {
+                // Verificar si ya existe un estado para este usuario
+                const checkResponse = await fetch(`http://localhost:5500/api/UserStatus?username=${currentUsername}`);
+                let existingStatus = null;
+                
+                if (checkResponse.ok) {
+                    const statuses = await checkResponse.json();
+                    existingStatus = statuses.find(s => s.username === currentUsername);
+                }
+                
+                // Crear o actualizar el estado
+                let response;
+                if (existingStatus) {
+                    response = await fetch(`http://localhost:5500/api/UserStatus/${existingStatus.id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            id: existingStatus.id,
+                            username: currentUsername,
+                            status: status,
+                            updatedAt: new Date().toISOString()
+                        })
+                    });
+                } else {
+                    response = await fetch('http://localhost:5500/api/UserStatus', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            username: currentUsername,
+                            status: status,
+                            updatedAt: new Date().toISOString()
+                        })
+                    });
+                }
+                
+                if (!response.ok) throw new Error("Error al actualizar estado");
+                
+                statusUpdateMessage.textContent = "Estado actualizado correctamente";
+                statusUpdateMessage.style.color = "green";
+                
+                // Actualizar la lista después de un breve retraso
+                setTimeout(fetchUserStatuses, 500);
+                
+            } catch (error) {
+                console.error("Error al actualizar estado:", error);
+                statusUpdateMessage.textContent = `Error: ${error.message}`;
+                statusUpdateMessage.style.color = "red";
+            }
+        }
+
+        // Helper para obtener clase CSS según el estado
+        function getStatusClass(status) {
+            switch (status.toLowerCase()) {
+                case 'online': return 'status-online';
+                case 'offline': return 'status-offline';
+                case 'away': return 'status-away';
+                case 'busy': return 'status-busy';
+                default: return 'status-offline';
+            }
+        }
+
+        // Helper para traducir estados
+        function translateStatus(status) {
+            switch (status.toLowerCase()) {
+                case 'online': return 'En línea';
+                case 'offline': return 'Desconectado';
+                case 'away': return 'Ausente';
+                case 'busy': return 'Ocupado';
+                default: return status;
+            }
+        }
+
+        // Manejo de conexión/desconexión
+        connectButton.addEventListener('click', () => {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                // Actualizar estado a "offline" antes de desconectar
+                updateUserStatus('offline').finally(() => {
+                    socket.close();
+                });
+                return;
+            }
+            
+            const username = usernameInput.value.trim();
+            if (!username) {
+                alert('Por favor ingresa un nombre de usuario');
+                return;
+            }
+            
+            connectWebSocket(username);
+        });
+
+        // Actualizar estado cuando se cambia la selección
+        updateStatusButton.addEventListener('click', () => {
+            const newStatus = statusSelect.value;
+            updateUserStatus(newStatus);
+        });
+
+        // Envío de mensajes de texto
+        sendButton.addEventListener('click', sendTextMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendTextMessage();
+        });
+
+        // Envío de multimedia
+        sendMediaButton.addEventListener('click', sendMediaMessage);
+        fileInput.addEventListener('change', updateMediaPreview);
+
+        // Gestión de multimedia
+        uploadButton.addEventListener('click', uploadFile);
+        viewButton.addEventListener('click', viewFile);
+
+        function sendTextMessage() {
+            const receiver = receiverInput.value.trim();
+            const message = messageInput.value.trim();
+            
+            if (!receiver) {
+                alert('Por favor ingresa un destinatario');
+                return;
+            }
+            
+            if (!message) {
+                alert('Por favor escribe un mensaje');
+                return;
+            }
+            
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    receiver: receiver,
+                    message: message
+                }));
+                messageInput.value = '';
+            }
+        }
+
+        async function sendMediaMessage() {
+            const receiver = mediaReceiverInput.value.trim();
+            const file = fileInput.files[0];
+            
+            if (!receiver) {
+                alert('Por favor ingresa un destinatario');
+                return;
+            }
+            
+            if (!file) {
+                alert('Por favor selecciona un archivo');
+                return;
+            }
+
+            try {
+                // Subir el archivo al servicio de multimedia
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const response = await fetch('http://localhost:8001/media/upload/', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || "Error al subir el archivo");
+                }
+
+                const data = await response.json();
+                
+                // Enviar el ID del archivo a través del chat
+                if (socket && socket.readyState === WebSocket.OPEN) {
+                    socket.send(JSON.stringify({
+                        receiver: receiver,
+                        message: `ARCHIVO:${data.file_id}`
+                    }));
+                    
+                    // Mostrar la imagen en el chat localmente
+                    const fileUrl = `http://localhost:8001/media/download/${data.file_id}`;
+                    addMessage(currentUsername, `[Imagen enviada]`, new Date().toISOString(), data.file_id);
+                    
+                    // Limpiar el formulario
+                    fileInput.value = '';
+                    mediaPreview.style.display = 'none';
+                }
+
+            } catch (error) {
+                console.error('Error al enviar multimedia:', error);
+                alert(`Error al enviar multimedia: ${error.message}`);
+            }
+        }
+
+        function updateMediaPreview() {
+            const file = fileInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    mediaPreview.src = e.target.result;
+                    mediaPreview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function uploadFile() {
+            const file = uploadFileInput.files[0];
+            if (!file) {
+                uploadStatus.textContent = "⚠️ Selecciona un archivo primero";
+                uploadStatus.style.color = "red";
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                uploadStatus.textContent = "Subiendo archivo...";
+                uploadStatus.style.color = "black";
+                
+                const response = await fetch('http://localhost:8001/media/upload/', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || "Error al subir");
+                }
+
+                const data = await response.json();
+                uploadStatus.innerHTML = `✅ Subido! <strong>ID:</strong> ${data.file_id}`;
+                uploadStatus.style.color = "green";
+                fileIdInput.value = data.file_id;
+
+            } catch (error) {
+                uploadStatus.textContent = `❌ Error: ${error.message}`;
+                uploadStatus.style.color = "red";
+            }
+        }
+
+        async function viewFile() {
+            const fileId = fileIdInput.value.trim();
+            if (!fileId) {
+                mediaDisplay.innerHTML = "<span style='color:red'>⚠️ Ingresa un ID</span>";
+                return;
+            }
+
+            try {
+                mediaDisplay.innerHTML = "Cargando...";
+                
+                const response = await fetch(`http://localhost:8001/media/download/${fileId}`);
+                if (!response.ok) throw new Error("Archivo no encontrado");
+                
+                const blob = await response.blob();
+                const imageUrl = URL.createObjectURL(blob);
+                mediaDisplay.innerHTML = `<img src="${imageUrl}" style="max-width:100%; max-height:300px;">`;
+                
+            } catch (error) {
+                mediaDisplay.innerHTML = `<span style="color:red">❌ ${error.message}</span>`;
+            }
+        }
+
+        function addMessage(sender, content, timestamp, fileId = null) {
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message';
+            
+            let contentHtml = `<div class="message-content">${content}</div>`;
+            if (fileId) {
+                contentHtml += `<img class="message-image" src="http://localhost:8001/media/download/${fileId}" alt="Imagen">`;
+            }
+            
+            messageElement.innerHTML = `
+                <div>
+                    <span class="message-sender">${sender}</span>
+                    <span class="message-time">${formatTime(timestamp)}</span>
+                </div>
+                ${contentHtml}
+            `;
+            
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function addSystemMessage(content) {
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message';
+            messageElement.style.backgroundColor = '#f0f0f0';
+            messageElement.innerHTML = `
+                <div class="message-content" style="text-align: center; color: #666;">${content}</div>
+            `;
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function updateConnectionStatus(connected) {
+            connectionStatus.textContent = connected ? 'Conectado' : 'Desconectado';
+            connectionStatus.className = connected ? 'status-connected' : 'status-disconnected';
+        }
+
+        function formatTime(timestamp) {
+            return new Date(timestamp).toLocaleTimeString();
+        }
+
+        function switchTab(tabName) {
+            // Actualizar pestañas
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Activar la pestaña seleccionada
+            document.querySelector(`.tab[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+        }
+    </script>
+    <!-- Añadir la librería SignalR -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.11/signalr.min.js"></script>
+</body>
+</html>

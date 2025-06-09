@@ -1,10 +1,10 @@
 from pydantic import BaseSettings
 
 class Settings(BaseSettings):
-    # Conexión completa (puede incluir o no el nombre de la BD en la URI)
+    # Conexión completa con mongo 27017
     mongodb_uri: str = "mongodb://localhost:27017/messaging_db"
     
-    # Nombre de la BD (se extraerá de la URI si está presente, si no, usará este)
+    # Nombre de la BD este o lo crea o lo utilizar 1 de 2 
     mongodb_name: str = "messaging_db"
     
     class Config:
